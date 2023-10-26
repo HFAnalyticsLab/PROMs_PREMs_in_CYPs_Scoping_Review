@@ -16,6 +16,10 @@ To keep track of changes in the literature we also explored text mining methods 
  * 177 studdies were included in the final review. 
 
 ## How does it work?
+To get started you will need to create a for_reference folder and a source.R file that includes your file paths. 
+
+*functions.R- includes functions to clean your abstract, this includes removing punctutations, preserving hyphens, keeping numbers within a hyphen etc.  
+
 Part 1- Text mining analysis to analyse frequently occuring terms in abstracts in the initial and updated search and how this has changes. 
 * Data- Abstracts of included studies and a flag if it was identified in the initial or updated search. 
 * 01_text_mining- this processes data, identifies top 50 frequently occuring terms, the ranking of the top 25 terms in the initial and updated search and how this has changed across the tope two periods. 
