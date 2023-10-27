@@ -22,26 +22,31 @@ source(here('functions.R'))
 
 # Data load ---------------------------------------------------------------
 
-#AA note which stage is this? - check whether this those that was screened full text
-#or those included in the final analysis 
-#try at different stages 
+
 raw<-read.csv(TIAB_loc)
 
-clean<-raw %>% 
-  clean_names() %>% 
-  select(covidence, extraction_date, title, abstract)
+# clean<-raw %>% 
+#   clean_names() %>% 
+#   select(covidence, extraction_date, title, abstract)
 
 
 # Processing abstract -------------------------------------------
 
 #for abstract only 
-clean<-raw %>% 
-  clean_names() %>% 
+clean<-raw%>% 
+  clean_names() %>%
   select(doc_id=covidence, text=abstract, extraction_date) %>% 
   mutate(text=stripWhitespace(text)) %>% 
   mutate(text=tolower(text)) %>% 
   mutate(text=custom_remove_punctuation_preseve_number(text)) %>% 
-  mutate(text=custom_remove_punctuation_everything_else(text)) 
+  mutate(text=custom_remove_punctuation_everything_else(text)) %>% 
+  mutate(text=str_replace_all(text, "quality of life", "quality-of-life")) %>% 
+  mutate(text=str_replace_all(text, "patient reported", "patient-reported")) %>% 
+  mutate(text=str_replace_all(text, "patient reported outcome", "patient-reported-outcomes")) %>% 
+  mutate(text=str_replace_all(text, "patient-reported outcome", "patient-reported-outcomes")) %>% 
+  mutate(text=str_replace_all(text, "patient reported experience", "patient-reported-experience")) %>% 
+  mutate(text=str_replace_all(text, "patient-reported experience", "patient-reported-experience")) 
+
 
 
 # Apply the custom function using dplyr
@@ -50,11 +55,14 @@ clean <- clean %>%
   mutate(text =custom_remove_stopwords(text, stop_words)) %>%
   ungroup()
 
+
+
+
 #Remove pre-specified words 
 list_words<-c("pediatric", 
               "peadiatric", 
-              "questionnaire", 
-              "measure", 
+              # "questionnaire", 
+              # "measure", 
               "aim",
               "result", 
               "method", 
@@ -67,9 +75,14 @@ list_words<-c("pediatric",
               "pro", 
               "rights", 
               "NULL", 
-              "report", 
+              # "report", 
               "study", 
-              "year") 
+              "year", 
+              "author",
+              "publish", 
+              "inc", 
+              "objective",
+              "introduction") 
 
 
 pattern <- paste0(paste(list_words, collapse = "|"))
@@ -86,6 +99,7 @@ clean_df<-clean %>%
   ungroup() 
 
 
+
 # Tokenizing ---------------------------------------------------------
 
 df_tokenized<-clean_df %>% 
@@ -97,10 +111,10 @@ df_tokenized<-clean_df %>%
   mutate(lem=lemmatize_strings(text)) %>% 
   mutate(lem=ifelse(str_detect(text, "electronic"), "electronic", lem)) %>% 
   mutate(lem=ifelse(str_detect(text, "paper|pen-and"), "pen - and - paper", lem)) %>% 
-  mutate(lem=ifelse(str_detect(text, "implement"), "implementation",lem))
-
-try<-df_tokenized %>% 
-  filter(lem=="assess" | lem=="assessment")
+  mutate(lem=ifelse(str_detect(text, "implement"), "implementation",lem)) %>% 
+  mutate(lem=ifelse(str_detect(text, "patient-reported-out"), "patient - report - outcome", lem)) %>% 
+  mutate(lem=ifelse(str_detect(text, "out - patient"), "outpatient", lem)) %>% 
+  mutate(lem=ifelse(str_detect(text,"in - patient"), "inpatient", lem))
 
 
 #Get rid of some single words
@@ -108,7 +122,7 @@ try<-df_tokenized %>%
 list_words<-letters
 
 df_tokenized<-df_tokenized %>% 
-filter(!(text %in% list_words))  
+  filter(!(text %in% list_words))  
 
 #count the terms  
 df_tokenized_count <- df_tokenized %>%
@@ -121,9 +135,9 @@ df_tokenized_count <- df_tokenized %>%
   ungroup() %>% 
   distinct()
 
-#exclude "patients"
-df_tokenized_count <- df_tokenized_count %>%
-  filter(lem!="patient")
+
+test<-df_tokenized_count %>% 
+  filter(str_detect(text, "patient"))
 
 
 df_top<-df_tokenized_count %>% 
@@ -132,16 +146,13 @@ df_top<-df_tokenized_count %>%
   top_n(50) %>% 
   arrange(desc(lem_count))
 
-df_top %>% 
-  filter(lem=="disease")
 
 df_top %>% 
-mutate(lem = reorder(lem, lem_count)) %>%
-ggplot(aes(lem_count, lem)) +
-geom_col() +
-labs(y = NULL)+
-theme_minimal()
-
+  mutate(lem = reorder(lem, lem_count)) %>%
+  ggplot(aes(lem_count, lem)) +
+  geom_col() +
+  labs(y = NULL)+
+  theme_minimal()
 
 
 # Wordcloud ---------------------------------------------------------------
@@ -149,6 +160,8 @@ theme_minimal()
 #Top 50 words wordcloud 
 wordcloud2(df_top, color = "random-dark", backgroundColor = "white")
 
+df_top %>% 
+  filter(lem=="electronic")
 
 # Look at term ranks per extraction date  ---------------------------------------------
 
@@ -163,8 +176,8 @@ df_tokenized_count_search <- df_tokenized %>%
   ungroup() %>% 
   distinct()
 
-df_tokenized_count_search <- df_tokenized_count_search %>%
-  filter(lem!="patient")
+#df_tokenized_count_search <- df_tokenized_count_search %>%
+# filter(lem!="patient")
 
 original_search<-df_tokenized_count_search %>% 
   select(extraction_date, lem, lem_count) %>% 
@@ -179,7 +192,7 @@ update_search<-df_tokenized_count_search %>%
   filter(extraction_date!="Original") %>% 
   arrange(desc(lem_count)) %>% 
   mutate(rank_update=row_number())
-  
+
 
 #Look at how the ranking of the top terms have changed over the 2 search dates
 
@@ -201,28 +214,32 @@ df<-df_tokenized_count %>%
   mutate(left_label= paste(lem,original,sep=", "), 
          right_label= paste(lem, new, sep=",")) %>%  
   mutate(check=original-new) %>% 
-  filter(check!=0) %>% 
-  mutate(new=ifelse(lem=="psychosocial", 43, new)) %>% 
-  mutate(new=ifelse(lem=="screen", 40, new))
+  # filter(check!=0) %>%
+  mutate(new=ifelse(lem=="practice", 35, new)) %>% 
+  mutate(new=ifelse(lem=="hrqol", 37, new)) %>% 
+  mutate(new=ifelse(lem=="screen", 39, new)) 
 
 
-p <- ggplot(df) + geom_segment(aes(x=1, xend=1.5, y=original, yend=new, col=class), alpha=0.5, size=.75, show.legend=F) + 
+palette.colors(palette = "Okabe-Ito")
+
+p <- ggplot(df) + geom_segment(aes(x=1, xend=1.5, y=original, yend=new, col=class), alpha=0.5, size=.75, show.legend=FALSE) + 
   geom_vline(xintercept=1, linetype="dashed", size=.1, alpha=0.5 ) + 
   geom_vline(xintercept=1.5, linetype="dashed", size=.1, alpha=0.5) +
   scale_color_manual(labels = c("Up", "Down"), 
-                     values = c("green"="#00ba38", "red"="#f8766d")) +  # color of lines
+                     values = c("green"="#0072B2", "red"="#F0E442")) +  # color of lines
   labs(x="", y="") +  # Axis labels
-  xlim(.5, 2.5) + ylim(43,0)# X and Y axis limits
- 
+  xlim(.5, 2.5) + ylim(40,0)# X and Y axis limits
+
 p
 
 # Add texts
-p<-p + geom_text(aes(label=df$left_label, y=df$original, x=rep(1, NROW(df))), hjust=1.1, size=5)+
-  geom_text(aes(label=df$right_label, y=df$new, x=rep(1.5, NROW(df))), hjust=-0.05, size=5)+
-  geom_text(label="2021 Search", x=0.85, y=2, vjust=1.2, size=5)  + # title
-  geom_text(label="2023 Search", x=1.65, y=0.85, vjust=-0.1, size=5) # title
-  #geom_text(label="Overall ranking of words", x=0.80, y=0, angle = 0, hjust = 0.5, vjust = 0)   # angle = 0 ensures horizontal text)  # title
+p<-p + geom_text(aes(label=df$left_label, y=df$original, x=rep(1, NROW(df))), hjust=1.1, size=8)+
+  geom_text(aes(label=df$right_label, y=df$new, x=rep(1.5, NROW(df))), hjust=-0.05, size=8)+
+  geom_text(label="2021 Search", x=0.85, y=2, vjust=1.2, size=8)  + # title
+  geom_text(label="2023 Search", x=1.65, y=0.85, vjust=-0.1, size=8)  # title
 
+p<-p + geom_text(aes(x = 1.3, y = 40, label = "*KLIK- PROMs portal used in hospitals in the Netherlands", color = "#CC79A7"),
+                 size = 7, vjust=0.6, hjust=-0.2, show.legend = FALSE)
 p
 # Minify theme
 p<-p + theme(panel.background = element_blank(), 
@@ -231,8 +248,44 @@ p<-p + theme(panel.background = element_blank(),
              axis.text.x = element_blank(),
              panel.border = element_blank(), 
              axis.text.y= element_blank()
-             )
+)
 
+p
+
+
+ggsave("plot.png", plot = p, dpi = 300)
+
+
+
+# Further refinement of words --------------------------------------------
+
+#Investigate the list of words and see if it makes sense to remove some of them 
+
+# try<-df_tokenized %>% 
+#   filter(lem=="age")
+
+# unique(try$text)
+#Not sure about life
+#Not sure about analysis but have excluded it for now 
+
+#exclude other words that might not be needed "patients"
+# list_words<-c("patient",
+#               "use", 
+#               "complete",
+#               "care", 
+#               "group", 
+#               "hospital", 
+#               "time", 
+#               "rate", 
+#               "high", 
+#               "quality", 
+#               "analysis", 
+#               "month")
+# # 
+# 
+# 
+# df_tokenized_count <- df_tokenized_count %>%
+#   filter(!lem %in% list_words)
 p
 
 
