@@ -135,9 +135,9 @@ df_tokenized_count <- df_tokenized %>%
   ungroup() %>% 
   distinct()
 
-
-test<-df_tokenized_count %>% 
-  filter(str_detect(text, "patient"))
+# 
+# test<-df_tokenized_count %>% 
+#   filter(str_detect(text, "patient"))
 
 
 df_top<-df_tokenized_count %>% 
@@ -159,6 +159,10 @@ df_top %>%
 
 #Top 50 words wordcloud 
 wordcloud2(df_top, color = "random-dark", backgroundColor = "white")
+
+#edit shape
+wordcloud2(df_top, color = "random-dark", backgroundColor = "white", shape="pentagon")
+
 
 df_top %>% 
   filter(lem=="electronic")
@@ -207,9 +211,9 @@ df<-df_tokenized_count %>%
               select(lem, original=rank_original), by="lem") %>% 
   left_join(update_search %>%  
               select(lem, new=rank_update), by="lem") %>% 
-  mutate(class=case_when(original<new~ "red", 
-                         original==new~ "yellow", 
-                         original>new~"green")) %>% 
+  mutate(class=case_when(original<new~ "yellow", 
+                         original==new~ "grey", 
+                         original>new~"blue")) %>% 
   select(-rank) %>% 
   mutate(left_label= paste(lem,original,sep=", "), 
          right_label= paste(lem, new, sep=",")) %>%  
@@ -222,11 +226,11 @@ df<-df_tokenized_count %>%
 
 palette.colors(palette = "Okabe-Ito")
 
-p <- ggplot(df) + geom_segment(aes(x=1, xend=1.5, y=original, yend=new, col=class), alpha=0.5, size=.75, show.legend=FALSE) + 
-  geom_vline(xintercept=1, linetype="dashed", size=.1, alpha=0.5 ) + 
-  geom_vline(xintercept=1.5, linetype="dashed", size=.1, alpha=0.5) +
-  scale_color_manual(labels = c("Up", "Down"), 
-                     values = c("green"="#0072B2", "red"="#F0E442")) +  # color of lines
+p <- ggplot(df) + geom_segment(aes(x=1, xend=1.5, y=original, yend=new, col=class), size=.75, show.legend=FALSE) + 
+  geom_vline(xintercept=1, linetype="dashed", size=2, alpha=0.5, colour="#56B4E9") + 
+  geom_vline(xintercept=1.50, linetype="dashed", size=2, alpha=0.5, colour="#56B4E9") +
+  scale_color_manual(labels = c("Up", "Down", "Same"), 
+                     values = c("blue"="#0072B2", "yellow"="#F0E442", "grey"="#999999")) +  # color of lines
   labs(x="", y="") +  # Axis labels
   xlim(.5, 2.5) + ylim(40,0)# X and Y axis limits
 
@@ -236,9 +240,9 @@ p
 p<-p + geom_text(aes(label=df$left_label, y=df$original, x=rep(1, NROW(df))), hjust=1.1, size=8)+
   geom_text(aes(label=df$right_label, y=df$new, x=rep(1.5, NROW(df))), hjust=-0.05, size=8)+
   geom_text(label="2021 Search", x=0.85, y=2, vjust=1.2, size=8)  + # title
-  geom_text(label="2023 Search", x=1.65, y=0.85, vjust=-0.1, size=8)  # title
+  geom_text(label="2023 Search", x=1.62, y=0.85, vjust=-0.1, size=8)  # title
 
-p<-p + geom_text(aes(x = 1.3, y = 40, label = "*KLIK- PROMs portal used in hospitals in the Netherlands", color = "#CC79A7"),
+p<-p + geom_text(aes(x = 1.35, y = 40, label = "*KLIK- PROMs portal used in hospitals in the Netherlands", color = "#CC79A7"),
                  size = 7, vjust=0.6, hjust=-0.2, show.legend = FALSE)
 p
 # Minify theme
@@ -286,7 +290,7 @@ ggsave("plot.png", plot = p, dpi = 300)
 # 
 # df_tokenized_count <- df_tokenized_count %>%
 #   filter(!lem %in% list_words)
-p
-
-
-ggsave("plot.png", plot = p, dpi = 300)
+# p
+# 
+# 
+# ggsave("plot.png", plot = p, dpi = 300)
