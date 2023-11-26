@@ -18,14 +18,18 @@ To keep track of changes in the literature we also explored text mining methods 
 ## How does it work?
 To get started you will need to create a **for_reference** folder and then include a **source.R**  that states your file paths. 
 
-* functions.R- includes functions to clean your abstract, this includes removing punctutations, preserving hyphens, keeping numbers within a hyphen etc.  
+* functions.R- includes functions to clean your abstract, this includes removing punctuation, preserving hyphens, keeping numbers within a hyphen etc.  
 
-Part 1- Text mining analysis to analyse frequently occuring terms in abstracts and explore how this has changed between the initial and updated search.  
+Part 1- Text mining analysis to analyse frequently occurring terms in abstracts and explore how this has changed between the initial and updated search.  
 * Data- Abstracts of included studies and a flag if it was identified in the initial or updated search. 
-* 01_text_mining- this processes data, identifies top 50 frequently occuring terms, the ranking of the top 25 terms in the initial and updated search and how this has changed across the tope two periods. 
+* 01_text_mining- this processes data, identifies top 50 frequently occurring terms, the ranking of the top 25 terms in the initial and updated search and how this has changed across the two periods. 
 
-Part 2- Processing of the extracted data for the analysis of the scoping review (Ongoing) 
-* Data - Extracted data from the included studies based on the extraction table. The extraction was done in covidence
+Part 2- Processing of the extracted data for the analysis of the scoping review
+* Data 
+- Extracted data from the included studies based on the extraction table. The extraction was done in covidence. 
+- Also requires data from mural which shows each studies that belong in the specific themes. 
+* 02_data_extraction_and_desciriptive_table- Data cleaning for the extracted data and includes compiling descriptive table for the reuslts. 
+* 03_themes_data_extraction_and_tables- Data cleaning fro the themes from mural and creating summary and tally tables for the results. This also extracts the references for the specific themes. 
 
 ### Requirements 
 
