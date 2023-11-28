@@ -136,9 +136,6 @@ extract_cleaning_one_level<-function (raw=data_applied){
              cat=paste(cat, collapse=",")) %>% 
       distinct(study_id, .keep_all = TRUE) %>% 
       left_join(demog,   by=c("study_id"="covidence_number"))  %>% 
-      mutate(type=case_when(type=="PROM"~ "Proms",
-                            type=="PREM"~ "Prems",
-                            type=="PROM_and_PREM"~ "Proms and Prems")) %>%
       mutate_if(is.character, funs(remove_duplicates_within_cell)) %>% 
       ungroup() %>% 
       select(author, type, collection, country, speciality, cat, group, desc) 
@@ -190,9 +187,6 @@ extract_cleaning_twolevels<-function(raw=barriers) {
            cat=paste(cat, collapse=",")) %>% 
     distinct(study_id, .keep_all = TRUE) %>% 
     left_join(demog,   by=c("study_id"="covidence_number"))  %>% 
-    mutate(type=case_when(type=="PROM"~ "Proms",
-                          type=="PREM"~ "Prems",
-                          type=="PROM_and_PREM"~ "Proms and Prems")) %>%
     mutate_if(is.character, funs(remove_duplicates_within_cell)) %>% 
     ungroup() %>% 
     select(author, type, collection, country, speciality, cat, group, lowergroup, desc) 

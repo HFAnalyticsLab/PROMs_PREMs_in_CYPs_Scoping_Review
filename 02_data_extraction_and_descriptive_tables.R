@@ -21,7 +21,7 @@ source(here('functions.R'))
 
 # Data load ---------------------------------------------------------------
 
-raw<-read_csv(paste0(data_loc,'/raw_data3.csv'))
+raw<-read_csv(paste0(data_loc,'/raw_data4.csv'))
 
 
 # Data cleaning -----------------------------------------------------------
@@ -323,43 +323,22 @@ clean_df<-clean_df %>%
   mutate(country=gsub("USA", "United States", country)) %>% 
   mutate(country=gsub("US", "United States", country)) %>% 
   mutate(country=ifelse(str_detect(country, "and "),"multiple_countries", country)) %>% 
-  mutate(country=ifelse(is.na(country), "Not stated", country))
+  mutate(country=ifelse(is.na(country), "Not stated", country)) %>% 
+  mutate(country=gsub("Europe", "multiple_countries", country))
 
 
 # Results -----------------------------------------------------------------
 
 
-#Summary statistics  (in appendix)
+#Summary statistics
 tab<-clean_df %>% 
-  select(c(collection:not_stated, cardio:not_applicable,multiple:not_stated_speciality, barriers:country)) %>%
+  select(c(collection:not_stated, cardio:not_applicable,multiple:not_stated_speciality, context, barriers:country)) %>%
   tbl_summary() %>% 
   bold_labels() %>% 
   as.tibble() %>% 
   mutate_if(is.character, ~replace(., is.na(.), ""))
 
 write.csv(tab, here('results', 'clean_table.csv'))
-
-
-#Table 1- Summary statistics 
-tab_short<-clean_df %>% 
-  select(c(collection:not_stated, cardio:not_applicable,multiple:not_stated_speciality, barriers:country)) %>%
-  select(c(collection:not_stated, oncology, mental_health, rheumatology, not_applicable, not_stated_speciality, multiple, cardio:allergy, 
-           country)) %>% 
-  rowwise() %>% 
-  mutate(other_speciality=ifelse(multiple==1, NA,sum(across(c(cardio:allergy))))) %>% 
-  mutate(type=case_when(type=="PROM"~ "PROMs",
-                        type=="PREM"~ "PREMs",
-                        type=="PROM_and_PREM"~ "PROMs and PREMs")) %>% 
-  # mutate(cardio=ifelse(multiple==1,0,1), 
-  #        mental_health=ifelse(multiple==1,0,1), 
-  #        rheumatolgy=ifelse(multiple==1,0,1)) %>% 
-  select(-c(cardio:allergy)) %>% 
-  tbl_summary() %>% 
-  bold_labels() %>% 
-  as.tibble() %>% 
-  mutate_if(is.character, ~replace(., is.na(.), ""))
-
-write.csv(tab, here('results', 'clean_table_short.csv'))
 
 
 klik<-clean_df %>% 
