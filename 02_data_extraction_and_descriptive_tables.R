@@ -32,6 +32,8 @@ raw<-raw %>%
                                           regex("mix", ignore_case = TRUE))~"mixed", 
                                str_detect(collection_method,
                                           regex("phone and", ignore_case = TRUE))~"mixed",
+                               str_detect(collection_method,
+                                          regex("and electronic", ignore_case = TRUE))~"mixed",
                                str_detect(collection_method, 
                                           regex("pen", ignore_case = TRUE))~"pen_and_ppr",
                                str_detect(collection_method, 
@@ -396,7 +398,8 @@ plot<-ggplot(t, aes(x = year_of_publication, y = count)) +
   geom_line(data = filter(t, type == "total"), aes(y=cum_sum), size = 0.5, type=5) +
   geom_text(data = filter(t, type == "total"),aes(y=cum_sum, label=cum_sum, vjust=-0.5, hjust=0.7))+
   scale_fill_manual(values = palette)+
-  labs(x="Year of publication", y="Count")+
+  labs(x="Year of publication", y="Count", caption="Line chart showing the cumulative total publications over time and a bar chart showing the number of publications by year and type of collection. 
+  This only includes publications up to April 2023 only. Not applicable represents studies exploring views, barriers and facilitators.") +
   theme_minimal()+
   theme(panel.grid = element_blank(),
         plot.background = element_rect(colour = 'white'),
@@ -405,223 +408,14 @@ plot<-ggplot(t, aes(x = year_of_publication, y = count)) +
         axis.text.y =  element_text(size = 11) , # Change the font size for axis text
         axis.title = element_text(size = 14),  # Change the font size for axis titles
         legend.text = element_text(size = 10),  # Change the font size for legend text
-        legend.title = element_text(size = 12)  # Change the font size for legend title
-  )+
+        legend.title = element_text(size = 12), 
+        plot.caption = element_text(size=10, hjust=-0.1))+  # Change the font size for legend title
   guides(fill = guide_legend(title = "Type of collection"))
 
 
+plot
 ggsave(here('results', 'plot_1.png'), plot, dpi=300,width = 10, height =6.5)
 
-
-# Type of PROMs/PREMs -----------------------------------------------------------
-
-type_measure<-clean_df %>% 
-  select(prom_s_reported_including_tool_details) %>% 
-  mutate(not_stated=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                         regex("Not stated", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("none reported", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("none speci", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("not speci", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("varies", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("designed and applied", ignore_case = TRUE))~1,
-                              TRUE~NA)) %>% 
-  mutate(n_a=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("n/a", ignore_case = TRUE))~1,
-                       str_detect(prom_s_reported_including_tool_details, 
-                                  regex("no prom", ignore_case = TRUE))~1,
-                       is.na(prom_s_reported_including_tool_details)~1,
-                       TRUE~NA)) %>% 
-  
-  mutate(pedsql=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                     regex("pedsql", ignore_case = TRUE))~1,
-                          str_detect(prom_s_reported_including_tool_details, 
-                                     regex("quality of life inventory", ignore_case = TRUE))~1,
-                          str_detect(prom_s_reported_including_tool_details, 
-                                     regex("Peds-ql", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(PROMIS=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                     regex("PROMIS", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(TNO_AZL_TAPQOL=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                             regex("TAPQOL", ignore_case = TRUE))~1,
-                                  str_detect(prom_s_reported_including_tool_details, 
-                                             regex("TNO-AZL", ignore_case = TRUE))~1, 
-                                  str_detect(prom_s_reported_including_tool_details, 
-                                             regex("TNOAZL", ignore_case = TRUE))~1,
-                                  TRUE~NA)) %>% 
-  mutate(KIDsCAT=case_when(str_detect(prom_s_reported_including_tool_details,
-                                      regex("kids-cat", ignore_case = TRUE))~1,
-                           TRUE~NA)) %>% 
-  mutate(kidscreen=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                        regex("kidscreen", ignore_case = TRUE))~1,
-                             TRUE~NA)) %>% 
-  mutate(VAS=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("VAS", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(WHO_5=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("who-5", ignore_case = TRUE))~1,
-                         str_detect(prom_s_reported_including_tool_details, 
-                                    regex("who 5", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  mutate(WHOQOL=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                     regex("WHOQOL", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(PHQ_2=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("PHQ-2", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  mutate(PHQ_4=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("PHQ-4", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  
-  mutate(PHQ_9=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("PHQ-9", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  mutate(pain=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                   regex("pain", ignore_case = TRUE))~1,
-                        TRUE~NA)) %>% 
-  mutate(SDQ=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("SDQ", ignore_case = TRUE))~1,
-                       str_detect(prom_s_reported_including_tool_details, 
-                                  regex("strength", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(ASQ=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("ASQ", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(PELTQL=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                     regex("PeLTQL", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(BOQ=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("boq", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(vision_related=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                             regex("vision related", ignore_case = TRUE))~1,
-                                  str_detect(prom_s_reported_including_tool_details, 
-                                             regex("vision", ignore_case = TRUE))~1,
-                                  TRUE~NA)) %>% 
-  mutate(beck_youth_inventory=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                                   regex("beck youth", ignore_case = TRUE))~1,
-                                        TRUE~NA)) %>% 
-  mutate(mind_youth=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                         regex("mind youth", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("mind-youth", ignore_case = TRUE))~1,
-                              str_detect(prom_s_reported_including_tool_details, 
-                                         regex("dawn mind", ignore_case = TRUE))~1,
-                              TRUE~NA)) %>% 
-  mutate(DLQI=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                   regex("DLQI", ignore_case = TRUE))~1,
-                        TRUE~NA)) %>% 
-  mutate(PSC=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("PSC", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(pedhal=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                     regex("pedhal", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(ASRS_A=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                     regex("ASRS-A", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(JAMAR=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("JAMAR", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  
-  mutate(CBI=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                  regex("CBI", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(EPP_QOL=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                      regex("epp-qol", ignore_case = TRUE))~1,
-                           TRUE~NA)) %>% 
-  mutate(RCADS=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("RCADS", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  mutate(memorial_symptom_assessment_scale=case_when(str_detect(prom_s_reported_including_tool_details,
-                                                                regex("Memorial Symptom Assessment Scale", ignore_case = TRUE))~1,
-                                                     TRUE~NA)) %>% 
-  mutate(ePROMs=case_when(str_detect(prom_s_reported_including_tool_details,
-                                     regex("ePROMs", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  mutate(cancer=case_when(str_detect(prom_s_reported_including_tool_details,
-                                     regex("cancer", ignore_case = TRUE))~1,
-                          str_detect(prom_s_reported_including_tool_details,
-                                     regex("oncology", ignore_case = TRUE))~1,
-                          TRUE~NA)) %>% 
-  
-  mutate(diabetes=case_when(str_detect(prom_s_reported_including_tool_details,
-                                       regex("diabetes", ignore_case = TRUE))~1,
-                            TRUE~NA)) %>% 
-  
-  mutate(epilepsy=case_when(str_detect(prom_s_reported_including_tool_details,
-                                       regex("epilepsy", ignore_case = TRUE))~1,
-                            TRUE~NA)) %>% 
-  mutate(disab_kids=case_when(str_detect(prom_s_reported_including_tool_details,
-                                         regex("disabkids", ignore_case = TRUE))~1,
-                              TRUE~NA)) %>% 
-  mutate(NRS=case_when(str_detect(prom_s_reported_including_tool_details,
-                                  regex("NRS", ignore_case = TRUE))~1,
-                       TRUE~NA)) %>% 
-  mutate(GAD_7=case_when(str_detect(prom_s_reported_including_tool_details,
-                                    regex("GAD", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  mutate(JQL=case_when(str_detect(prom_s_reported_including_tool_details,
-                                  regex("JQL", ignore_case = TRUE))~1,
-                       TRUE~NA)) 
-
-names<-paste(c(colnames(clean_df %>% 
-                          select(cardio:allergy)),"fatigue", "burns"),rep(c("", "outcome", "association", "specific"),30, each=4))
-
-pattern <- paste0("(", paste(names, collapse = "|"), ")")
-
-
-type_measure<-type_measure %>%
-  mutate(disease_specific=case_when(str_detect(prom_s_reported_including_tool_details,
-                                               regex("specific", ignore_case = TRUE))& is.na(not_stated)~1,
-                                    str_detect(prom_s_reported_including_tool_details,
-                                               regex("disease specific", ignore_case = TRUE))~1,
-                                    str_detect(prom_s_reported_including_tool_details,
-                                               regex(pattern, ignore_case = TRUE))~1,
-                                    TRUE~NA)) %>% 
-  mutate(HRQOL=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                    regex("hrqol", ignore_case = TRUE))~1,
-                         str_detect(prom_s_reported_including_tool_details, 
-                                    regex("health related quality of life", ignore_case = TRUE))~1,
-                         str_detect(prom_s_reported_including_tool_details, 
-                                    regex("qol tool", ignore_case = TRUE))~1,
-                         str_detect(prom_s_reported_including_tool_details, 
-                                    regex("qol testing", ignore_case = TRUE))~1,
-                         str_detect(prom_s_reported_including_tool_details, 
-                                    regex("health, qol", ignore_case = TRUE))~1,
-                         TRUE~NA)) %>% 
-  mutate(symptom_specific=case_when(str_detect(prom_s_reported_including_tool_details,
-                                               regex("symptom", ignore_case = TRUE))& is.na(not_stated)~1,
-                                    str_detect(prom_s_reported_including_tool_details,
-                                               regex("symptom specific", ignore_case = TRUE))~1,
-                                    TRUE~NA)) %>% 
-  mutate(self_report=case_when(str_detect(prom_s_reported_including_tool_details,
-                                          regex("self", ignore_case = TRUE))~1,
-                               str_detect(prom_s_reported_including_tool_details,
-                                          regex("child", ignore_case = TRUE))~1,
-                               TRUE~NA)) %>%
-  mutate(proxy_report=case_when(str_detect(prom_s_reported_including_tool_details,
-                                           regex("proxy", ignore_case = TRUE))~1,
-                                str_detect(prom_s_reported_including_tool_details,
-                                           regex("parent", ignore_case = TRUE))~1,
-                                TRUE~NA)) %>% 
-  mutate(generic=case_when(str_detect(prom_s_reported_including_tool_details, 
-                                      regex("Gen", ignore_case = TRUE))~1,
-                           pedsql==1&(is.na(disease_specific)| is.na(symptom_specific))~1,
-                           TRUE~NA)) %>% 
-  mutate(psychological_screening=case_when(PHQ_2==1~1,
-                                           PHQ_4==1~1, 
-                                           PHQ_9==1~1, 
-                                           beck_youth_inventory==1~1
-  ))
-
-
-write.csv(type_measures, file= here('results', 'prom_type.csv'))
 
 
 

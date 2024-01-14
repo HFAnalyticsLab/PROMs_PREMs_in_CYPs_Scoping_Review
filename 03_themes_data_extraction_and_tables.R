@@ -23,7 +23,7 @@ source('functions.R')
 
 
 # Get study demogeaphics -------------------------------------------------------
-raw<-read_csv(paste0(data_loc,'/raw_data3.csv'))
+raw<-read_csv(paste0(data_loc,'/raw_data4.csv'))
 
 raw<-raw %>% 
   clean_names() %>% 
@@ -358,6 +358,7 @@ results<-read_excel(paste0(dt_loc,'/mural_data.xlsx'), sheet='How_they_are_used'
 
 
 #Tally table in results
+
 tally_one_level(raw=results)
 
 used_tally <-tally_findings
@@ -540,10 +541,6 @@ doc <- body_add_flextable(doc, value = my_flextable)
 end.landscape(doc)
 
 print(doc, target=here('results', 'trial.docx'))
-
-
-
-
 
 
 # extract_references_to_Check ------------------------------------------------------

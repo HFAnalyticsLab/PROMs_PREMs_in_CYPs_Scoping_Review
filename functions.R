@@ -251,51 +251,11 @@ pal_THF_cont <- c(THF_red, THF_50pct_rose, THF_75pct_rose, THF_50pct_light_blue,
 
 #table from mural 
 
+#table from mural 
+
 tally_one_level<-function (raw=data_applied){
   
-  df<-raw %>% 
-    clean_names()
-  
-  colnames <-df[1,] %>% 
-    t() %>% 
-    as.data.frame()
-  
-  colnames<-colnames %>% 
-    mutate(cat=row.names(colnames)) %>% 
-    rename(group=V1) %>% 
-    mutate(cat=gsub("[0-9]","",cat)) 
-  
-  rownames(colnames)<-NULL
-  
-  tab_df<-df %>% 
-    row_to_names(1) %>% 
-    pivot_longer(everything(),names_to="group", values_to="desc") %>% 
-    separate(desc, into=c("study_id", "desc"), sep="]-") %>% 
-    mutate(study_id=(gsub("\\[|\\]", "", study_id))) %>%
-    mutate(study_id=(gsub("['\"]", "", study_id))) %>% 
-    filter(!is.na(study_id)) %>% 
-    left_join(colnames) %>% 
-    select(study_id, cat) %>% 
-    distinct() %>% 
-    left_join (demog %>% 
-                 ungroup() %>% 
-                 select(study_id=covidence_number, type)) %>% 
-        ungroup()
-  
-  
- tally_findings<-tab_df %>% 
-    select(-study_id) %>% 
-    tbl_summary(by=type) %>% 
-    add_overall() %>% 
-    as_tibble()
-    
-  # Save the result into the global environment
-  assign("tally_findings", tally_findings, envir = .GlobalEnv)
-  
-}
-
-references_one_level<-function(raw=results){
-  df<-raw %>% 
+  df<-raw() %>% 
     clean_names()
   
   colnames <-df[1,] %>% 
@@ -318,10 +278,73 @@ references_one_level<-function(raw=results){
     filter(!is.na(study_id)) %>% 
     left_join(colnames) %>% 
     select(study_id, cat, group) %>% 
-    distinct() %>% 
+    group_by(study_id, cat) %>% 
+    mutate(dups_cat=cumsum(n())) %>% 
     left_join (demog %>% 
                  ungroup() %>% 
-                 select(study_id=covidence_number, author )) %>% 
+                 select(study_id=covidence_number, type)) %>% 
+    ungroup()
+  
+  # tally_findings<-tab_df %>%
+  #   filter(dups==0) %>%
+  #   select(cat, type) %>%
+  #   group_by(cat, type) %>%
+  #   summarise(n())
+
+  
+  tally_findings<-tab_df %>%
+    filter(dups_cat<2) %>% 
+    select(cat, type) %>% 
+    tbl_summary(by=type) %>% 
+    add_overall() %>% 
+    as_tibble()
+  
+  # Save the result into the global environment
+  assign("tally_findings", tally_findings, envir = .GlobalEnv)
+  
+}
+
+references_one_level<-function(raw=results){
+  
+  df<-raw %>% 
+    clean_names()
+  
+  
+  df<-results %>% 
+    clean_names()
+  
+  
+  colnames <-df[1,] %>% 
+    t() %>% 
+    as.data.frame()
+  
+  colnames<-colnames %>% 
+    mutate(cat=row.names(colnames)) %>% 
+    rename(group=V1) %>% 
+    mutate(cat=gsub("[0-9]","",cat)) 
+  
+  rownames(colnames)<-NULL
+  
+  tab_df<-df %>% 
+    row_to_names(1) %>% 
+    pivot_longer(everything(),names_to="group", values_to="desc") %>% 
+    separate(desc, into=c("study_id", "desc"), sep="]-") %>% 
+    mutate(study_id=(gsub("\\[|\\]", "", study_id))) %>%
+    mutate(study_id=(gsub("['\"]", "", study_id))) %>% 
+    filter(!is.na(study_id)) %>% 
+    left_join(colnames) %>% 
+    select(study_id, cat, group) %>% 
+    group_by(study_id, cat, group) %>% 
+    mutate(dups_groups=n()) %>% 
+    filter(dups_groups<2) %>% 
+    ungroup() %>% 
+    group_by(study_id, cat) %>% 
+    mutate(dups_cat=n()) %>% 
+    #filter(dups_cat<2) %>% 
+    ungroup %>% 
+    left_join (demog %>% 
+                 ungroup() %>% 
+                 select(study_id=covidence_number, author, type)) %>% 
     ungroup()
   
   assign("tab_df", tab_df, envir = .GlobalEnv)
@@ -330,7 +353,7 @@ references_one_level<-function(raw=results){
 
 
 references_two_level<-function(raw=barriers){
-
+  
   df<-raw %>% 
     clean_names()
   
@@ -354,14 +377,23 @@ references_two_level<-function(raw=barriers){
     filter(!is.na(study_id)) %>% 
     left_join(colnames) %>% 
     select(study_id, cat, group, lowergroup) %>% 
+    group_by(study_id, cat, group, lowergroup) %>% 
+    mutate(dups_lowergroups=ifelse(n()>1, 1,0)) %>% 
+    ungroup() %>% 
+    group_by(study_id, cat, group) %>%
+    mutate(dups_groups=ifelse(n()>1,1,0)) %>% 
+    ungroup() %>% 
+    group_by(study_id, cat) %>% 
+    mutate(dups_cat=ifelse(n()>1,1,0)) %>% 
+    ungroup %>% 
+    filter(dups_lowergroups==0) %>% 
     distinct() %>% 
     left_join (demog %>% 
                  ungroup() %>% 
-                 select(study_id=covidence_number, author )) %>% 
+                 select(study_id=covidence_number, author)) %>% 
     ungroup()
   
   assign("tab_df", tab_df, envir = .GlobalEnv)
   
 }
-
 
