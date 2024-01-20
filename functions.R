@@ -255,7 +255,7 @@ pal_THF_cont <- c(THF_red, THF_50pct_rose, THF_75pct_rose, THF_50pct_light_blue,
 
 tally_one_level<-function (raw=data_applied){
   
-  df<-raw() %>% 
+  df<-raw %>% 
     clean_names()
   
   colnames <-df[1,] %>% 
@@ -285,12 +285,6 @@ tally_one_level<-function (raw=data_applied){
                  select(study_id=covidence_number, type)) %>% 
     ungroup()
   
-  # tally_findings<-tab_df %>%
-  #   filter(dups==0) %>%
-  #   select(cat, type) %>%
-  #   group_by(cat, type) %>%
-  #   summarise(n())
-
   
   tally_findings<-tab_df %>%
     filter(dups_cat<2) %>% 
