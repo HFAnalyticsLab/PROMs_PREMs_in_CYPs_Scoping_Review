@@ -67,6 +67,10 @@ raw<-raw %>%
                                is.na(collection_method)~ "not applicable",
                                TRUE~"not applicable"))
 
+collection<-raw %>% 
+  select(study_id_2, title_3,collection_method, collection )
+
+
 clean_df<-raw %>% 
   mutate(type=case_when((is.na(prem_s_used_including_tool_details) | str_detect(prem_s_used_including_tool_details, 
                                                                                 regex("n/a", ignore_case = TRUE))) 
@@ -79,17 +83,24 @@ clean_df<-raw %>%
                         (!is.na(prem_s_used_including_tool_details) | !str_detect(prem_s_used_including_tool_details, 
                                                                                   regex("n/a", ignore_case = TRUE))) 
                         & (!is.na(prom_s_reported_including_tool_details)| !str_detect(prom_s_reported_including_tool_details,
-                                                                                       regex("n/a", ignore_case = TRUE)))~ "PROM_and_PREM")) %>% 
-  
+                                                                                       regex("n/a", ignore_case = TRUE)))~ "PROM_and_PREM")) 
+
+
+type<-clean_df %>% 
+  select(study_id_2, title_3, prom_s_reported_including_tool_details,prem_s_used_including_tool_details, type)
+
+clean_df<-clean_df %>% 
   mutate(participant=case_when(participant_type_s=="Patient"~ "Patient", 
                                participant_type_s=="Proxy"~ "Proxy", 
                                participant_type_s=="Clinician"~ "Clinician", 
                                participant_type_s=="Patient and proxy"~ "Patient and proxy",
                                participant_type_s=="Clinician and proxy"~ "Clinician and proxy",
                                participant_type_s=="Patient, proxy and clinician"~ "Patient, proxy and clinician", 
-                               str_detect(participant_type_s, 'Other')~ "Other", 
-                               TRUE ~ NA_character_)) %>% 
-  
+                               TRUE ~ NA_character_)) 
+participant<-clean_df %>% 
+  select(study_id_2, title_3, participant_type_s, participants_details_e_g_age_sex_and_number, participant)
+
+clean_df<-clean_df %>% 
   mutate(outpatient=case_when(str_detect(context_setting_e_g_ward_emergency_care, 
                                          regex("outpatient", ignore_case = TRUE))~1,
                               TRUE~0)) %>% 
@@ -110,8 +121,13 @@ clean_df<-raw %>%
                               TRUE~0)) %>% 
   rowwise() %>% 
   mutate(check_setting=sum(across(c(outpatient:not_stated)))) %>% 
-  ungroup() %>% 
+  ungroup() 
+
+setting<-clean_df %>% 
+  select(study_id_2, title_3,context_setting_e_g_ward_emergency_care, outpatient, inpatient, mixture, not_stated)
   
+
+clean_df<-clean_df %>%   
   mutate(cardio=case_when(str_detect(context_setting_e_g_ward_emergency_care, 
                                      regex("cardi", ignore_case = TRUE))~1, 
                           str_detect(context_setting_e_g_ward_emergency_care, 
@@ -262,29 +278,17 @@ clean_df<-raw %>%
   rowwise() %>% 
   mutate(sum_care=sum(across(c(cardio:not_applicable)))) %>% 
   ungroup() %>% 
-  mutate(multiple=case_when(str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("centres", ignore_case = TRUE))~1,
-                            str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("groups", ignore_case = TRUE))~1,
-                            str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("various", ignore_case = TRUE))~1,
-                            str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("illness", ignore_case = TRUE))~1,
-                            str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("divisions", ignore_case = TRUE))~1,
-                            str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("pediatrics", ignore_case = TRUE))~1,
-                            str_detect(context_setting_e_g_ward_emergency_care,
-                                       regex("clinics", ignore_case = TRUE))~1,
-                            sum_care>1~1, 
-                            TRUE~0)) %>%
   mutate(not_stated_speciality=case_when(str_detect(context_setting_e_g_ward_emergency_care, 
                                                     regex("stated", ignore_case = TRUE))~1,
                                          sum_care==0 ~ 1,
                                          TRUE~0)) %>% 
-  rowwise() %>% 
-  mutate(check_care=sum(across(c(cardio:not_stated)))) %>% 
-  ungroup() %>% 
+  ungroup() 
+
+speciality<-clean_df %>% 
+  select(study_id_2, title_3, context_setting_e_g_ward_emergency_care, cardio:not_stated_speciality)
+  
+  
+clean_df<-clean_df %>%   
   mutate(context=case_when(is.na(context_setting_e_g_ward_emergency_care)~ "not_stated", 
                            str_detect(context_setting_e_g_ward_emergency_care, 
                                       regex("n/a", ignore_case = TRUE))~"not_stated",
@@ -308,14 +312,10 @@ clean_df<-raw %>%
                                       regex("groups", ignore_case = TRUE))~"multicentres",
                            str_detect(context_setting_e_g_ward_emergency_care, 
                                       regex("stated", ignore_case = TRUE))~"not_stated",
-                           TRUE~"single_centre")) %>% 
-  rename(.,barriers_text=x3a_key_findings_in_relation_to_barriers, facilitators_text=x3b_key_findings_in_relation_to_facilitators) %>% 
-  mutate(barriers=case_when((is.na(barriers_text) | str_detect(barriers_text,regex("n/a", ignore_case = TRUE)) |
-                               str_detect(barriers_text,regex("not stated", ignore_case = TRUE)))~ 0, 
-                            TRUE~1), 
-         facilitators=case_when((is.na(facilitators_text) | str_detect(facilitators_text,regex("n/a", ignore_case = TRUE)) |
-                                   str_detect(facilitators_text,regex("not stated", ignore_case = TRUE)))~ 0, 
-                                TRUE~1)) 
+                           TRUE~"single_centre")) 
+
+context<-clean_df %>% 
+  select(study_id_2, title_3, context_setting_e_g_ward_emergency_care, context)
 
 clean_df<-clean_df %>% 
   mutate(country=ifelse(str_detect(country_in_which_the_study_conducted, "Other: [A-Z]"), gsub("Other: ", "",country_in_which_the_study_conducted),
@@ -328,23 +328,26 @@ clean_df<-clean_df %>%
   mutate(country=ifelse(is.na(country), "Not stated", country)) %>% 
   mutate(country=gsub("Europe", "multiple_countries", country))
 
+country<-clean_df %>% 
+  select(study_id_2, title_3, country_in_which_the_study_conducted, country)
+
+
 
 # Results -----------------------------------------------------------------
 
 
 #Summary statistics
-tab<-clean_df %>% 
-  select(c(collection:not_stated, cardio:not_applicable,multiple:not_stated_speciality, context, barriers:country)) %>%
+clean_df %>% 
+  select(c(collection:not_stated, cardio:not_stated_speciality, context, country)) %>%
   tbl_summary() %>% 
-  bold_labels() %>% 
-  as.tibble() %>% 
-  mutate_if(is.character, ~replace(., is.na(.), ""))
+  bold_labels() 
 
-write.csv(tab, here('results', 'clean_table.csv'))
+list_files<-list(collection=collection, type=type, participant=participant, setting=setting, speciality=speciality, context=context,country=country)
 
+write_xlsx(list_files, path = here('results', 'table1.xlsx'))
 
 klik<-clean_df %>% 
-  filter( str_detect(collection_method,  regex("KLIK", ignore_case = TRUE)))
+  filter(str_detect(collection_method,  regex("KLIK", ignore_case = TRUE)))
 #23 studies that mentioned KLIK 
 
 
