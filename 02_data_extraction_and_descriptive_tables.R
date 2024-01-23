@@ -421,4 +421,26 @@ ggsave(here('results', 'plot_1.png'), plot, dpi=300,width = 10, height =6.5)
 
 
 
+plot_pdf<-ggplot(t, aes(x = year_of_publication, y = count)) +
+  scale_x_continuous(breaks=unique(t$year_of_publication), labels = unique(t$year_lab))+
+  geom_bar(data = filter(t, type != "total"), aes(fill = type_lab), stat = "identity") +
+  geom_text(data = filter(t, type == "total" & year_of_publication>2013), aes(label = count), vjust = -0.5, hjust = 0.5, size=10)+
+  geom_line(data = filter(t, type == "total"), aes(y=cum_sum), size = 1, type=5) +
+  geom_text(data = filter(t, type == "total"),aes(y=cum_sum, label=cum_sum, vjust=-0.5, hjust=0.7),  size=10)+
+  scale_fill_manual(values = palette)+
+  labs(x="Year of publication", y="Count", caption="Line chart showing the cumulative total publications over time and a bar chart showing the number of publications by year and type of collection. 
+  This only includes publications up to April 2023 only. Not applicable represents studies exploring views, barriers and facilitators.") +
+  theme_minimal()+
+  theme(panel.grid = element_blank(),
+        plot.background = element_rect(colour = 'white'),
+        panel.border = element_rect(color = "black", fill = "NA"), 
+        axis.text.x =  element_text(size = 16, angle=45, hjust=1), 
+        axis.text.y =  element_text(size = 16) , # Change the font size for axis text
+        axis.title = element_text(size = 20),  # Change the font size for axis titles
+        legend.text = element_text(size = 14),  # Change the font size for legend text
+        legend.title = element_text(size = 14),# Change the font size for legend title 
+        plot.caption = element_text(size=16, hjust=-0.1))+ 
+  guides(fill = guide_legend(title = "Type of collection"))
 
+plot_pdf
+ggsave(here('results', 'plot_1.pdf'), plot_pdf, dpi=300,width = 20, height =13)

@@ -279,10 +279,11 @@ tally_one_level<-function (raw=data_applied){
     left_join(colnames) %>% 
     select(study_id, cat, group) %>% 
     group_by(study_id, cat) %>% 
-    mutate(dups_cat=cumsum(n())) %>% 
+    mutate(count=1,
+           dups_cat=cumsum(count)) %>% 
     left_join (demog %>% 
                  ungroup() %>% 
-                 select(study_id=covidence_number, type)) %>% 
+                 select(study_id=covidence_number, type, author,  title)) %>% 
     ungroup()
   
   
@@ -302,11 +303,6 @@ references_one_level<-function(raw=results){
   
   df<-raw %>% 
     clean_names()
-  
-  
-  df<-results %>% 
-    clean_names()
-  
   
   colnames <-df[1,] %>% 
     t() %>% 
@@ -328,18 +324,14 @@ references_one_level<-function(raw=results){
     filter(!is.na(study_id)) %>% 
     left_join(colnames) %>% 
     select(study_id, cat, group) %>% 
-    group_by(study_id, cat, group) %>% 
-    mutate(dups_groups=n()) %>% 
-    filter(dups_groups<2) %>% 
-    ungroup() %>% 
     group_by(study_id, cat) %>% 
-    mutate(dups_cat=n()) %>% 
-    #filter(dups_cat<2) %>% 
-    ungroup %>% 
+    mutate(count=1,
+           dups_cat=cumsum(count)) %>% 
     left_join (demog %>% 
                  ungroup() %>% 
-                 select(study_id=covidence_number, author, type)) %>% 
+                 select(study_id=covidence_number, type, author,  title)) %>% 
     ungroup()
+  
   
   assign("tab_df", tab_df, envir = .GlobalEnv)
   

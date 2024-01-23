@@ -318,7 +318,7 @@ demog<-clean_df %>%
          cardio:not_stated_speciality) %>%
   select(-sum_care) %>%
   pivot_longer(cardio:not_stated_speciality, names_to="speciality", values_to="count") %>% 
-  group_by(covidence_number, author, type, country,
+  group_by(covidence_number, author, title, type, country,
            collection,context,participant, study_design, participants_details_e_g_age_sex_and_number, prom_s_reported_including_tool_details, 
            prem_s_used_including_tool_details) %>% 
   filter(count>0) %>% 
