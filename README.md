@@ -13,7 +13,7 @@ To keep track of changes in the literature we also explored text mining methods 
 ## Data source
  * Ovid (Emcare, Embase MEDLINE, APA PsychInfo), Scopus and Web of Science were searched.
  * Manual reviews were initially performed in Covidence and using the elegibility criteria.
- * 177 studdies were included in the final review. 
+ * 172 studdies were included in the final review. 
 
 ## How does it work?
 To get started you will need to create a **for_reference** folder and then include a **source.R**  that states your file paths. 
@@ -35,7 +35,7 @@ To get started you will need to create a **for_reference** folder and then inclu
 *Data*
 
 * Extracted data from the included studies based on the extraction table. The extraction was done in covidence. 
-* Also requires data from mural which shows each studies that belong in the specific themes.#
+* Also requires data from [mural](https://app.mural.co/t/promspremsscopingreview1752/m/promspremsscopingreview1752/1691762102261/a248b97f0fd34ecc1479cd5e532c4fa9e7e47fab?sender=ua702a75d65081b93fc770599) which shows each studies that belong in the specific themes.
 
 *Script*
 
